@@ -20,12 +20,11 @@ def load_scaler():
 
 @st.cache_resource
 def load_scaler_y():
-    return joblib.load('scaler_y.joblib')  # Asegúrate de haber guardado este scaler
+    return joblib.load('scaler_y.joblib')
 
 @st.cache_data
 def load_data():
     return pd.read_csv("datos_casosRespiratorios.csv")
-
 
 model = load_model()
 scaler = load_scaler()
@@ -105,76 +104,29 @@ def show_graphs():
 
 # Interfaz de usuario
 def main():
-    st.sidebar.title("Navegación")
-    page = st.sidebar.radio("Ir a", ["Introducción", "Predicción", "Análisis de Datos"])
+    st.title("Predicción de Casos Sintomáticos")
+    st.write("Ingrese los niveles actuales de contaminantes para obtener una predicción.")
 
-    if page == "Introducción":
-        st.image("caratula.png", 
-                caption="Sistema de predicción de casos sintomáticos de enfermedades respiratorias",
-                use_column_width=True)
-        
-        st.write("""
-        ## Bienvenido a nuestra aplicación
-        
-        Esta herramienta innovadora utiliza datos históricos sobre la contaminación del aire 
-        para estimar el número de casos sintomáticos de enfermedades respiratorias en Ilo.
-        """)
-        
-        st.markdown("""
-        ### Navegación
-        
-        Utilice la barra lateral para explorar las diferentes secciones de la aplicación:
-        
-        - **Predicción**: Ingrese los niveles actuales de contaminantes para obtener una predicción.
-        - **Análisis de Datos**: Explore visualizaciones de los datos históricos y su interpretación.
-        """)
-        
-        st.markdown("""
-        ---
-        ### Créditos
-        
-        Este proyecto fue desarrollado por:
-        
-        - Jamir Balcona
-        - Carlos Mamani
-        - Ivan Ccaso
-        - Gabriela
-        
-        © 2024 Todos los derechos reservados
-        """)
+    col1, col2 = st.columns(2)
 
-        st.warning("""
-        **Nota Importante**: Esta aplicación es solo para fines educativos y de demostración. 
-        No debe utilizarse como único recurso para tomar decisiones médicas o de salud pública.
-        """)
-    elif page == "Predicción":
-        st.title("Predicción de Casos Sintomáticos")
-        st.write("Ingrese los niveles actuales de contaminantes para obtener una predicción.")
+    with col1:
+        st.subheader("Formulario de Entrada")
+        h2s = st.number_input('H2S (24h)', min_value=0.0, max_value=100.0, value=10.0)
+        so2 = st.number_input('SO2 (24h)', min_value=0.0, max_value=100.0, value=20.0)
+        co = st.number_input('CO', min_value=0.0, max_value=1000.0, value=200.0)
 
-        col1, col2 = st.columns(2)
+    with col2:
+        st.subheader("Ajuste Fino")
+        h2s = st.slider('H2S (24h)', 0.0, 100.0, h2s)
+        so2 = st.slider('SO2 (24h)', 0.0, 100.0, so2)
+        co = st.slider('CO', 0.0, 1000.0, co)
 
-        with col1:
-            st.subheader("Formulario de Entrada")
-            h2s = st.number_input('H2S (24h)', min_value=0.0, max_value=100.0, value=10.0)
-            so2 = st.number_input('SO2 (24h)', min_value=0.0, max_value=100.0, value=20.0)
-            co = st.number_input('CO', min_value=0.0, max_value=1000.0, value=200.0)
+    if st.button('Realizar Predicción'):
+        input_df = pd.DataFrame({'H2S_24h': [h2s], 'SO2_24h': [so2], 'CO': [co]})
+        prediction = make_prediction(input_df)
+        st.success(f'El número estimado de casos sintomáticos es: {prediction:.2f}')
 
-        with col2:
-            st.subheader("Ajuste Fino")
-            h2s = st.slider('H2S (24h)', 0.0, 100.0, h2s)
-            so2 = st.slider('SO2 (24h)', 0.0, 100.0, so2)
-            co = st.slider('CO', 0.0, 1000.0, co)
-
-        if st.button('Realizar Predicción'):
-            input_df = pd.DataFrame({'H2S_24h': [h2s], 'SO2_24h': [so2], 'CO': [co]})
-            prediction = make_prediction(input_df)
-            st.success(f'El número estimado de casos sintomáticos es: {prediction:.2f}')
-
-            # Mostrar gráficos después de la predicción
-            show_graphs()
-
-    elif page == "Análisis de Datos":
-        st.title("Análisis de Datos Históricos")
+        # Mostrar gráficos después de la predicción
         show_graphs()
 
 if __name__ == "__main__":
